@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <canvas style="border: 1px solid black;" id="canvas" width="800" height="600"></canvas>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    console.log("connected");
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let startX = 0;
+    let startY = 0;
+
+    let isDrawing = false;
+
+    canvas.addEventListener("mousedown", (e) => {
+      startX = e.offsetX;
+      startY = e.offsetY;
+      isDrawing = true;
+      console.log(e.offsetY);
+    })
+    canvas.addEventListener("mousemove", (e) => {
+      if(isDrawing) {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);//start point
+        ctx.lineTo(e.offsetX, e.offsetY);// end point
+        ctx.stroke();
+
+        socket.emit("drawing",{x1: startX, y1 : startY, x2: e.offsetX, y2: e.offsetY});
+
+        //Add this here
+        startX = e.offsetX;
+        startY = e.offsetY;
+
+        
+      }
+      
+      
+
+    })
+    canvas.addEventListener("mouseup", (e) => {
+      console.log(e);
+      isDrawing = false;
+    })
+
+    socket.on("drawing", ({x1,y1,x2,y2}) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2,y2);
+      ctx.stroke();
+    });
+  </script>
+</body>
+</html>

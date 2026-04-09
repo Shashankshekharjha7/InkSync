@@ -7,6 +7,8 @@ import path from "path";
 import {fileURLToPath} from "url";
 
 
+
+
 const app = express()
 const server = createServer(app);
 
@@ -17,6 +19,10 @@ const __dirname = path.dirname(__filename);
 
 app.get("/", (req,res) => {
   res.sendFile(path.join(__dirname, "index.html"));
+})
+
+app.get("/canvas", (req,res) => {
+  res.sendFile(path.join(__dirname, "canvas.html"));
 })
 
 io.on("connection", (socket) => {
@@ -43,6 +49,19 @@ io.on("connection", (socket) => {
     text: username + " has joined the chat"
     });
     console.log("joining room:", room)
+  });
+
+  socket.on("drawing", ({ x1, y1, x2, y2 }) => {
+  console.log("Drawing:", x1, y1, x2, y2);
+
+  
+
+    socket.broadcast.emit("drawing", {
+      x1,
+      y1,
+      x2,
+      y2
+      });
   });
 
   
