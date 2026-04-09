@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+  </head>
+  
+  <body>
+    <h1>Chat app</h1>
+
+    <!-- username display -->
+     <p id="currentUser"></p>
+
+    <!-- message UI -->
+    <input type="text" id="messageInput" placeholder = "type a message" />
+    <button id="sendButton">Send</button>
+    <ul id="messages"></ul>
+
+    <!-- join UI -->
+    <input type="text" id="usernameInput" placeholder="enter your username">
+    <button id="joinButton">Join</button>
+
+    <!--room input-->
+    <input type="text" id="roomInput" placeholder="roomName">
+    
+
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+      const socket = io()
+      console.log("connected")
+
+      const input = document.getElementById("messageInput");
+      const button = document.getElementById("sendButton");
+
+      const input1 = document.getElementById("usernameInput");
+      const button1 = document.getElementById("joinButton");
+      
+      const input2 = document.getElementById("roomInput");
+
+      const userDisplay = document.getElementById("currentUser");
+
+      //hide message UI initially
+      input.style.display = "none";
+      button.style.display = "none";
+
+      //this is for message section
+      button.addEventListener("click", () => {
+        const messageText = input.value;
+
+        if(messageText.trim() === "") return ; //prevent empty message
+
+        socket.emit("message", messageText);
+        input.value = "";
+      });
+
+      socket.on("message", (data) => {
+        const item = document.createElement("li");
+        item.textContent = data.username + ": " + data.text;
+        document.getElementById("messages").appendChild(item);
+      })
+
+      
+      // this is for username section
+      button1.addEventListener("click", () => {
+        const usernameText = input1.value;
+        const roomnameText = input2.value;
+
+        if(usernameText.trim() === "") return; //prevent empty username
+        if(roomnameText.trim() === "") return; //prevent empty roomname
+
+        socket.emit("join", {username:usernameText, room: roomnameText});
+        input1.value = "";
+    
+
+        //show chat UI
+        input.style.display = "inline";
+        button.style.display = "inline";
+
+        //hide UI so user can't join twice
+        input1.style.display = "none";
+        button1.style.display = "none";
+
+        //show username 
+        userDisplay.textContent = "Logged in as:" + usernameText; 
+      });
+    </script>
+  </body>
+  
+</html>
