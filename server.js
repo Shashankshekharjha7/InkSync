@@ -25,6 +25,8 @@ app.get("/canvas", (req,res) => {
   res.sendFile(path.join(__dirname, "canvas.html"));
 })
 
+const rooms = {};
+
 io.on("connection", (socket) => {
   console.log("a user connected", socket.id)
 
@@ -43,6 +45,19 @@ io.on("connection", (socket) => {
     socket.emit("joined", {message: "Welcome " + username});
 
     socket.join(room);
+
+    //Add user to the room in our object
+    if(!rooms[room]) {
+      rooms[room] = {
+        players: [],
+        turnIndex: 0
+      };
+    }
+    rooms[room].players.push(username);
+
+    console.log(rooms);
+
+    
 
     socket.to(room).emit("message", {
     username: "System",
