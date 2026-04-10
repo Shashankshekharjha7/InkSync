@@ -26,6 +26,18 @@ app.get("/canvas", (req,res) => {
 })
 
 const rooms = {};
+const words = [
+  "samosa",
+  "biryani",
+  "chai",
+  "ms dhoni",
+  "auto rickshaw",
+  "gully boy",
+  "cricket bat",
+  "bollywood dance",
+  "metro train",
+  "taj mahal"
+];
 
 io.on("connection", (socket) => {
   console.log("a user connected", socket.id)
@@ -65,6 +77,29 @@ io.on("connection", (socket) => {
     });
     console.log("joining room:", room)
   });
+
+  
+  socket.on("nextTurn", (room) => {
+    const game = rooms[room];
+    
+    const currentPlayer = game.players[game.turnIndex];
+    
+    //pick random words
+    const word = words[Math.floor(Math.random() * words.length)];
+
+    //tell eeryone who is drawing
+    io.to(room).emit("roundStart", {
+      drawer: currentPlayer,
+    });
+
+    //send secret word only to drawer(socket that triggered this for now)
+    socket.emit("yourWord", word);
+
+    //move turn forward
+    game.turnIndex = (game.turnIndex + 1) % game.players.length;
+    
+  });
+  
 
   socket.on("drawing", ({ x1, y1, x2, y2 }) => {
   console.log("Drawing:", x1, y1, x2, y2);
