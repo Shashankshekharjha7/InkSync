@@ -6,14 +6,26 @@
   <title>Document</title>
 </head>
 <body>
+  <h2 id="drawerDisplay"></h2>
+  <p id="wordDisplay"></p>
+  <button id="startButton"></button>
   <canvas style="border: 1px solid black;" id="canvas" width="800" height="600"></canvas>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    console.log("connected");
+
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get("room");
+    const username = params.get("username");
+
+    socket.emit("join", {username, room});
+    console.log("connected to room:", room);
 
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+    const drawerDisplay = document.getElementById("drawerDisplay");
+    const wordDisplay = document.getElementById("wordDisplay");
+    const startButton = document.getElementById("startButton");
 
     let startX = 0;
     let startY = 0;
@@ -55,6 +67,21 @@
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2,y2);
       ctx.stroke();
+    });
+
+    // 2.start button => request next turn
+    startButton.addEventListener("click", () => {
+      socket.emit("nextTurn", room);
+    });
+
+    //3. show who is drawing (public info)
+    socket.on("roundStart", ({drawer}) => {
+      drawerDisplay.textContent = "Drawer: " + drawer;
+    });
+
+    //4. show secret word(private info)
+    socket.on("yourWord", (word) => {
+      wordDisplay.textContent = "Your word: " + word;
     });
   </script>
 </body>

@@ -102,11 +102,11 @@ io.on("connection", (socket) => {
   
 
   socket.on("drawing", ({ x1, y1, x2, y2 }) => {
-  console.log("Drawing:", x1, y1, x2, y2);
+    if(!socket.room) return;
 
   
 
-    socket.broadcast.emit("drawing", {
+    socket.broadcast.to(socket.room).emit("drawing", {
       x1,
       y1,
       x2,

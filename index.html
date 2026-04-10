@@ -80,8 +80,13 @@
         input1.style.display = "none";
         button1.style.display = "none";
 
+        
+
         //show username 
         userDisplay.textContent = "Logged in as:" + usernameText; 
+
+        //join canvas.html using window.location.href
+        window.location.href=`/canvas?room=${roomnameText}&username=${usernameText}`;
       });
     </script>
   </body>
