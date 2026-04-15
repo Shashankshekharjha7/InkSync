@@ -10,6 +10,10 @@
   <p id="wordDisplay"></p>
   <button id="startButton"></button>
   <canvas style="border: 1px solid black;" id="canvas" width="800" height="600"></canvas>
+  <input type="text" id="guessInput" placeholder="Enter your guess"/>
+  <button id="guessButton">Guess</button>
+
+  <ul id="guessMessages"></ul>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
@@ -26,6 +30,10 @@
     const drawerDisplay = document.getElementById("drawerDisplay");
     const wordDisplay = document.getElementById("wordDisplay");
     const startButton = document.getElementById("startButton");
+
+    const guessInput = document.getElementById("guessInput");
+    const guessButton = document.getElementById("guessButton");
+    const guessMessages = document.getElementById("guessMessages");
 
     let startX = 0;
     let startY = 0;
@@ -77,11 +85,48 @@
     //3. show who is drawing (public info)
     socket.on("roundStart", ({drawer}) => {
       drawerDisplay.textContent = "Drawer: " + drawer;
+
+      if(username === drawer) {
+        //current user is the drawer -> hides guess UI
+        guessInput.style.display = "none";//show secret word
+        guessButton.style.display = "none";// hide from guessers
+      } else {
+        //viewer -> show guess UI
+        guessInput.style.display = "inline";
+        guessButton.style.display = "inline";
+      }
     });
 
     //4. show secret word(private info)
     socket.on("yourWord", (word) => {
       wordDisplay.textContent = "Your word: " + word;
+    });
+
+    guessButton.addEventListener("click", () => {
+      const guess = guessInput.value;
+
+      if(guess.trim() === "") return;
+
+      socket.emit("guess", guess);
+      guessInput.value = "";
+    })
+
+    socket.on("message", (data) => {
+      const item = document.createElement("li");
+      item.textContent = data.username + ": " + data.text;
+      guessMessages.appendChild(item);
+    });
+
+    socket.on("correct", ({winner, word}) => {
+      const item = document.createElement("li");
+      item.textContent = "🎉 " + winner + "guessed it! The word was " + word;
+      guessMessages.appendChild(item);
+    })
+
+    guessInput.addEventListener("keypress", (e) => {
+      if(e.key === "Enter") {
+        guessButton.click();
+      }
     });
   </script>
 </body>

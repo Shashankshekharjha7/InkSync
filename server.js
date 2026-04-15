@@ -52,6 +52,7 @@ io.on("connection", (socket) => {
 
   socket.on("join", ({username, room}) => {
     socket.username = (username);
+  
     socket.room = (room);
     console.log("user joined:", username);
     socket.emit("joined", {message: "Welcome " + username});
@@ -65,7 +66,10 @@ io.on("connection", (socket) => {
         turnIndex: 0
       };
     }
-    rooms[room].players.push(username);
+    rooms[room].players.push({
+      username: username,
+      id: socket.id
+    });
 
     console.log(rooms);
 
@@ -87,13 +91,19 @@ io.on("connection", (socket) => {
     //pick random words
     const word = words[Math.floor(Math.random() * words.length)];
 
+    //store it in room state
+    game.currentWord = word;
+
     //tell eeryone who is drawing
     io.to(room).emit("roundStart", {
-      drawer: currentPlayer,
+      drawer: currentPlayer.username,
     });
 
+    console.log("game:", game);
+    console.log("players:", game.players);
+
     //send secret word only to drawer(socket that triggered this for now)
-    socket.emit("yourWord", word);
+    io.to(currentPlayer.id).emit("yourWord", word);
 
     //move turn forward
     game.turnIndex = (game.turnIndex + 1) % game.players.length;
@@ -114,8 +124,28 @@ io.on("connection", (socket) => {
       });
   });
 
-  
-  
+  socket.on("guess", (guess) => {
+    console.log("guess received:", guess);
+    if(!socket.room || !rooms[socket.room]) return;
+
+    const game = rooms[socket.room];
+    const correctWord = game.currentWord;
+
+    //normalize (optional but recommended)
+    if(guess.toLowerCase() === correctWord.toLowerCase()) {
+      //correct guess
+      io.to(socket.room).emit("correct", {
+        winner: socket.username,
+        word: correctWord
+      });
+    } else {
+      //wrong guess -> treat like normal message
+      io.to(socket.room).emit("message", {
+        username: socket.username,
+        text: guess
+      });
+    }
+  });
 })
 
 server.listen(3000, () => {
